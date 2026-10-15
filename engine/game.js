@@ -12,7 +12,7 @@ const other = (side) => (side === "red" ? "blue" : "red");
 export function createGame(seed, config = CONFIG) {
   const mid = Math.floor(config.height / 2);
   const homeRows = Array.from({ length: config.homeSize }, (_, i) => mid - Math.floor(config.homeSize / 2) + i);
-  const unit = (x) => ({ x, y: mid, score: 0, carry: 0, stun: 0, rest: 0 });
+  const unit = (x) => ({ x, y: mid, score: 0, carry: 0, stun: 0, rest: 0, spent: 0 });
   const game = {
     seed,
     config,
@@ -70,7 +70,8 @@ export function buildView(game, side) {
     height,
     rules: { heavyAt, maxTraps, stunTicks },
     me: { pos: pt(me), score: me.score, carry: me.carry, stunned: me.stun, resting: me.rest },
-    opp: { pos: pt(opp), score: opp.score, carry: opp.carry, stunned: opp.stun },
+    // Trap spending is hidden: the opponent sees your score before trap costs.
+    opp: { pos: pt(opp), score: opp.score + opp.spent, carry: opp.carry, stunned: opp.stun },
     myHome: game.home[side].map(pt),
     oppHome: game.home[other(side)].map(pt),
     coins: game.coins.map(pt),
@@ -122,6 +123,7 @@ export function step(game, actions) {
       game.traps.some((t) => t.x === u.x && t.y === u.y);
     if (u.score >= cost && mine < maxTraps && !blocked) {
       u.score -= cost;
+      u.spent += cost;
       game.traps.push({ x: u.x, y: u.y, owner: side });
       events.push({ type: "trap-set", side, x: u.x, y: u.y, cost });
     }

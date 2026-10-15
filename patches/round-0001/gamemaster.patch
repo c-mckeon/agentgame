@@ -1,0 +1,83 @@
+diff --git a/RULES.md b/RULES.md
+index 9148acf..ee6354c 100644
+--- a/RULES.md
++++ b/RULES.md
+@@ -1,4 +1,4 @@
+-# Coin Grab: Rules (version 2)
++# Coin Grab: Rules (version 3)
+ 
+ This file is the source of truth for every agent. The game master updates it whenever the rules change. All numbers below come from `engine/config.js`.
+ 
+@@ -22,6 +22,7 @@ This file is the source of truth for every agent. The game master updates it whe
+ - **Cost**, paid from your *banked* score: `1 + (number of your traps already on the board)`, so 1, then 2, then 3. You can't have more than 3 traps on the board at once.
+ - Traps can't be placed on home tiles or on a cell that already has a trap. If you can't afford it or it isn't allowed, nothing happens.
+ - **Your opponent cannot see your traps**, and you cannot see theirs. Viewers watching the match can see all of them.
++- **What you spend on traps is hidden too.** In your opponent's view, `opp.score` is your banked total *before* trap costs, so laying a trap doesn't show up as a score drop. The cost still comes off your real score, and the real score decides the winner.
+ - When a unit **moves onto** an enemy trap:
+   - it is **stunned for 3 ticks** (it can't act);
+   - everything it is carrying **scatters** onto free cells within 2 tiles, where anyone can pick it up;
+@@ -53,12 +54,12 @@ export default function createBot() {
+ ### The view
+ ```js
+ {
+-  rulesVersion: 2,
++  rulesVersion: 3,
+   tick: 37, maxTicks: 240,         // tick starts at 0
+   width: 15, height: 11,
+   rules: { heavyAt: 3, maxTraps: 3, stunTicks: 3 },
+   me:  { pos: {x, y}, score, carry, stunned, resting },  // stunned/resting = ticks left
+-  opp: { pos: {x, y}, score, carry, stunned },
++  opp: { pos: {x, y}, score, carry, stunned },  // opp.score leaves out their trap spending
+   myHome:  [ {x, y}, ... ],         // bank here
+   oppHome: [ {x, y}, ... ],
+   coins:   [ {x, y}, ... ],         // coins on the ground
+@@ -68,4 +69,4 @@ export default function createBot() {
+ ```
+ `x` grows to the east, `y` grows to the south, and `(0,0)` is the top-left corner. The view is read-only.
+ 
+-**Hint:** an enemy trap is invisible, but its effects aren't. If the opponent suddenly goes stunned, it just stepped on one of your traps. If its score drops by the trap cost, it just laid one.
++**Hint:** an enemy trap is invisible, and so is what it cost. You can still reason about where traps are likely. A `TRAP` keeps the opponent standing still for that tick (though so does `STAY`), and if the opponent suddenly goes stunned, it just stepped on one of yours.
+diff --git a/engine/config.js b/engine/config.js
+index e6661b2..9957616 100644
+--- a/engine/config.js
++++ b/engine/config.js
+@@ -1,7 +1,7 @@
+ // Game settings. The game master changes rules here (and in game.js).
+ // Bump RULES_VERSION whenever behaviour changes, and update RULES.md.
+ 
+-export const RULES_VERSION = 2;
++export const RULES_VERSION = 3;
+ 
+ export const CONFIG = {
+   width: 15,         // columns; red's home is on the left edge, blue's on the right
+diff --git a/engine/game.js b/engine/game.js
+index 73e6079..ca25384 100644
+--- a/engine/game.js
++++ b/engine/game.js
+@@ -12,7 +12,7 @@ const other = (side) => (side === "red" ? "blue" : "red");
+ export function createGame(seed, config = CONFIG) {
+   const mid = Math.floor(config.height / 2);
+   const homeRows = Array.from({ length: config.homeSize }, (_, i) => mid - Math.floor(config.homeSize / 2) + i);
+-  const unit = (x) => ({ x, y: mid, score: 0, carry: 0, stun: 0, rest: 0 });
++  const unit = (x) => ({ x, y: mid, score: 0, carry: 0, stun: 0, rest: 0, spent: 0 });
+   const game = {
+     seed,
+     config,
+@@ -70,7 +70,8 @@ export function buildView(game, side) {
+     height,
+     rules: { heavyAt, maxTraps, stunTicks },
+     me: { pos: pt(me), score: me.score, carry: me.carry, stunned: me.stun, resting: me.rest },
+-    opp: { pos: pt(opp), score: opp.score, carry: opp.carry, stunned: opp.stun },
++    // Trap spending is hidden: the opponent sees your score before trap costs.
++    opp: { pos: pt(opp), score: opp.score + opp.spent, carry: opp.carry, stunned: opp.stun },
+     myHome: game.home[side].map(pt),
+     oppHome: game.home[other(side)].map(pt),
+     coins: game.coins.map(pt),
+@@ -122,6 +123,7 @@ export function step(game, actions) {
+       game.traps.some((t) => t.x === u.x && t.y === u.y);
+     if (u.score >= cost && mine < maxTraps && !blocked) {
+       u.score -= cost;
++      u.spent += cost;
+       game.traps.push({ x: u.x, y: u.y, owner: side });
+       events.push({ type: "trap-set", side, x: u.x, y: u.y, cost });
+     }

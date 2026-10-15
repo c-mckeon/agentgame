@@ -1,4 +1,4 @@
-# Coin Grab: Rules (version 2)
+# Coin Grab: Rules (version 3)
 
 This file is the source of truth for every agent. The game master updates it whenever the rules change. All numbers below come from `engine/config.js`.
 
@@ -22,6 +22,7 @@ This file is the source of truth for every agent. The game master updates it whe
 - **Cost**, paid from your *banked* score: `1 + (number of your traps already on the board)`, so 1, then 2, then 3. You can't have more than 3 traps on the board at once.
 - Traps can't be placed on home tiles or on a cell that already has a trap. If you can't afford it or it isn't allowed, nothing happens.
 - **Your opponent cannot see your traps**, and you cannot see theirs. Viewers watching the match can see all of them.
+- **What you spend on traps is hidden too.** In your opponent's view, `opp.score` is your banked total *before* trap costs, so laying a trap doesn't show up as a score drop. The cost still comes off your real score, and the real score decides the winner.
 - When a unit **moves onto** an enemy trap:
   - it is **stunned for 3 ticks** (it can't act);
   - everything it is carrying **scatters** onto free cells within 2 tiles, where anyone can pick it up;
@@ -53,12 +54,12 @@ export default function createBot() {
 ### The view
 ```js
 {
-  rulesVersion: 2,
+  rulesVersion: 3,
   tick: 37, maxTicks: 240,         // tick starts at 0
   width: 15, height: 11,
   rules: { heavyAt: 3, maxTraps: 3, stunTicks: 3 },
   me:  { pos: {x, y}, score, carry, stunned, resting },  // stunned/resting = ticks left
-  opp: { pos: {x, y}, score, carry, stunned },
+  opp: { pos: {x, y}, score, carry, stunned },  // opp.score leaves out their trap spending
   myHome:  [ {x, y}, ... ],         // bank here
   oppHome: [ {x, y}, ... ],
   coins:   [ {x, y}, ... ],         // coins on the ground
@@ -68,4 +69,4 @@ export default function createBot() {
 ```
 `x` grows to the east, `y` grows to the south, and `(0,0)` is the top-left corner. The view is read-only.
 
-**Hint:** an enemy trap is invisible, but its effects aren't. If the opponent suddenly goes stunned, it just stepped on one of your traps. If its score drops by the trap cost, it just laid one.
+**Hint:** an enemy trap is invisible, and so is what it cost. You can still reason about where traps are likely. A `TRAP` keeps the opponent standing still for that tick (though so does `STAY`), and if the opponent suddenly goes stunned, it just stepped on one of yours.

@@ -1,7 +1,7 @@
 // Game settings. The game master changes rules here (and in game.js).
 // Bump RULES_VERSION whenever behaviour changes, and update RULES.md.
 
-export const RULES_VERSION = 2;
+export const RULES_VERSION = 3;
 
 export const CONFIG = {
   width: 15,         // columns; red's home is on the left edge, blue's on the right
