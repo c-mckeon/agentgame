@@ -10,16 +10,16 @@
   <main>
     <header>
       <h1>Coin Grab</h1>
-      <p class="sub">Two bots, one board. Every reload is a fresh match.</p>
+      <p class="sub">Grab coins, carry them home to bank them, and watch out for hidden traps. Every reload is a fresh match.</p>
     </header>
 
     <section class="scoreboard">
-      <div class="side red"><span class="name">Red</span><span class="score" id="score-red">0</span></div>
+      <div class="side red"><span class="name">Red</span><span class="score" id="score-red">0</span><span class="carry" id="carry-red"></span></div>
       <div class="clock">
         <span id="tick">tick 0 / 200</span>
         <div class="bar"><div class="fill" id="bar"></div></div>
       </div>
-      <div class="side blue"><span class="score" id="score-blue">0</span><span class="name">Blue</span></div>
+      <div class="side blue"><span class="carry" id="carry-blue"></span><span class="score" id="score-blue">0</span><span class="name">Blue</span></div>
     </section>
 
     <div class="board">

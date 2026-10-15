@@ -38,6 +38,8 @@ header .sub { margin: 4px 0 20px; color: var(--muted); }
 .side.blue { justify-content: flex-end; }
 .side .name { font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 13px; }
 .side .score { font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.side .carry { color: var(--gold); font-size: 13px; font-variant-numeric: tabular-nums; min-width: 84px; }
+.side.blue .carry { text-align: right; }
 .side.red .name, .side.red .score { color: var(--red); }
 .side.blue .name, .side.blue .score { color: var(--blue); }
 

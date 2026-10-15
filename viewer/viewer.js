@@ -4,7 +4,7 @@
 import { createGame, isOver, winner, SIDES } from "../engine/game.js";
 import { playTick } from "../engine/match.js";
 import { randomSeed } from "../engine/rng.js";
-import { createRenderer } from "./render.js";
+import { createRenderer, shownCarry, shownScore } from "./render.js";
 import createRed from "../players/red/bot.js";
 import createBlue from "../players/blue/bot.js";
 
@@ -22,9 +22,10 @@ let paused = false;
 
 let game, bots, prev, facing, effects, acc, finishedAt;
 
-function startMatch(seed = randomSeed()) {
+function startMatch(seed = randomSeed(), skipTo = 0) {
   game = createGame(seed);
   bots = { red: createRed(), blue: createBlue() };
+  while (game.tick < skipTo && !isOver(game)) playTick(game, bots);
   prev = snapshotUnits();
   facing = { red: { dx: 1, dy: 0 }, blue: { dx: -1, dy: 0 } };
   effects = [];
@@ -60,16 +61,16 @@ function frame(now) {
         const dy = game.units[side].y - prev[side].y;
         if (dx || dy) facing[side] = { dx, dy };
       }
-      updateHud();
     }
     if (isOver(game)) finishMatch(now);
   } else if (finishedAt !== null && !paused && now - finishedAt > PAUSE_BETWEEN_MS) {
     startMatch();
   }
 
-  effects = effects.filter((e) => now - e.born < 1000);
+  effects = effects.filter((e) => now - e.born < Math.max(1500, tickMs * 8));
   const t = isOver(game) ? 1 : Math.min(acc / tickMs, 1);
-  renderer.draw({ game, prev, t, effects, now, facing });
+  renderer.draw({ game, prev, t, effects, now, facing, tickMs });
+  updateHud(now, tickMs);
   requestAnimationFrame(frame);
 }
 
@@ -88,9 +89,14 @@ function finishMatch(now) {
   $("tally").textContent = `This session: Red ${tally.red} · Blue ${tally.blue} · Draws ${tally.draw}`;
 }
 
-function updateHud() {
-  $("score-red").textContent = game.units.red.score;
-  $("score-blue").textContent = game.units.blue.score;
+/** Scores follow the animation: a coin counts once the unit visibly reaches it. */
+function updateHud(now = performance.now(), tickMs = TICK_MS) {
+  const age = (e) => (now - e.born) / tickMs;
+  for (const side of SIDES) {
+    $(`score-${side}`).textContent = shownScore(game, effects, side, age);
+    const carry = shownCarry(game, effects, side, age);
+    $(`carry-${side}`).textContent = carry ? `carrying ${carry}` : "";
+  }
   $("tick").textContent = `tick ${game.tick} / ${game.config.maxTicks}`;
   $("bar").style.width = `${(100 * game.tick) / game.config.maxTicks}%`;
 }
@@ -117,6 +123,8 @@ fetch("version.json")
   .then((v) => { if (v) $("version-label").textContent = `· ${v.label}${v.commit ? ` (${v.commit})` : ""}`; })
   .catch(() => {});
 
-const seedParam = Number(new URLSearchParams(location.search).get("seed"));
-startMatch(Number.isFinite(seedParam) && seedParam > 0 ? seedParam : undefined);
+// ?seed=123 replays a match; &tick=150 jumps straight to that moment.
+const params = new URLSearchParams(location.search);
+const seedParam = Number(params.get("seed"));
+startMatch(Number.isFinite(seedParam) && seedParam > 0 ? seedParam : undefined, Number(params.get("tick")) || 0);
 requestAnimationFrame(frame);

@@ -1,31 +1,34 @@
 // RED's bot. Only Red may change this file.
 //
-// decide(view) is called once per tick and must return "N", "S", "E", "W" or "STAY".
+// decide(view) is called once per tick and returns "N", "S", "E", "W", "STAY" or "TRAP".
 // You always see yourself as the WEST (left) player; the engine handles mirroring.
 // createBot() is called once per match, so the returned object may keep state.
 
 export default function createBot() {
+  const dist = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+  const nearest = (from, list) => list.reduce((best, p) => (dist(from, p) < dist(from, best) ? p : best));
+  const stepTo = (from, to) => {
+    const dx = to.x - from.x, dy = to.y - from.y;
+    if (dx !== 0 && Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? "E" : "W";
+    if (dy !== 0) return dy > 0 ? "S" : "N";
+    return "STAY";
+  };
+
   return {
     decide(view) {
-      const { me, coins } = view;
-      if (coins.length === 0) return "STAY";
+      const { me, coins, myHome, myTraps, trapCost, tick, maxTicks, width } = view;
+      const home = nearest(me.pos, myHome);
 
-      // Walk towards the nearest coin.
-      let target = coins[0];
-      let best = Infinity;
-      for (const c of coins) {
-        const d = Math.abs(c.x - me.pos.x) + Math.abs(c.y - me.pos.y);
-        if (d < best) {
-          best = d;
-          target = c;
-        }
-      }
+      // Bank once carrying 3, or when time is running out.
+      const timeLeft = maxTicks - tick;
+      if (me.carry >= 3 || (me.carry > 0 && timeLeft <= dist(me.pos, home) * 2 + 4)) return stepTo(me.pos, home);
 
-      const dx = target.x - me.pos.x;
-      const dy = target.y - me.pos.y;
-      if (dx !== 0 && Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? "E" : "W";
-      if (dy !== 0) return dy > 0 ? "S" : "N";
-      return "STAY";
+      // Lay a trap in the middle column when it's affordable.
+      const onOwnTrap = myTraps.some((t) => t.x === me.pos.x && t.y === me.pos.y);
+      if (me.pos.x === Math.floor(width / 2) && !onOwnTrap && myTraps.length < 2 && me.score >= trapCost + 3) return "TRAP";
+
+      if (coins.length === 0) return me.carry > 0 ? stepTo(me.pos, home) : "STAY";
+      return stepTo(me.pos, nearest(me.pos, coins));
     },
   };
 }

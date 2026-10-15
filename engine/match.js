@@ -12,7 +12,7 @@ export function askBot(bot, game, side) {
   }
 }
 
-/** Play one tick: both bots decide on the same view of the board, then the engine steps. */
+/** Play one tick: both bots decide on the same board, then the engine steps. */
 export function playTick(game, bots) {
   const actions = {};
   for (const side of SIDES) actions[side] = askBot(bots[side], game, side);
@@ -23,6 +23,13 @@ export function playTick(game, bots) {
 export function runMatch(createRed, createBlue, seed) {
   const game = createGame(seed);
   const bots = { red: createRed(), blue: createBlue() };
-  while (!isOver(game)) playTick(game, bots);
-  return { seed, red: game.units.red.score, blue: game.units.blue.score, winner: winner(game) };
+  const stats = { trapsSet: { red: 0, blue: 0 }, trapped: { red: 0, blue: 0 }, banked: { red: 0, blue: 0 } };
+  while (!isOver(game)) {
+    for (const e of playTick(game, bots)) {
+      if (e.type === "trap-set") stats.trapsSet[e.side] += 1;
+      if (e.type === "trap-hit") stats.trapped[e.side] += 1;
+      if (e.type === "bank") stats.banked[e.side] += e.amount;
+    }
+  }
+  return { seed, red: game.units.red.score, blue: game.units.blue.score, winner: winner(game), stats };
 }
