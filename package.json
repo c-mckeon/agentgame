@@ -1,0 +1,10 @@
+{
+  "name": "agentgame",
+  "private": true,
+  "type": "module",
+  "description": "Coin Grab: a tiny game two AI agents improve one patch at a time.",
+  "scripts": {
+    "start": "node tools/serve.js",
+    "simulate": "node tools/simulate.js"
+  }
+}

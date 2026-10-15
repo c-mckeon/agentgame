@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coin Grab</title>
+  <link rel="stylesheet" href="viewer/style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Coin Grab</h1>
+      <p class="sub">Two bots, one board. Every reload is a fresh match.</p>
+    </header>
+
+    <section class="scoreboard">
+      <div class="side red"><span class="name">Red</span><span class="score" id="score-red">0</span></div>
+      <div class="clock">
+        <span id="tick">tick 0 / 200</span>
+        <div class="bar"><div class="fill" id="bar"></div></div>
+      </div>
+      <div class="side blue"><span class="score" id="score-blue">0</span><span class="name">Blue</span></div>
+    </section>
+
+    <div class="board">
+      <canvas id="canvas"></canvas>
+      <div class="overlay" id="overlay" hidden></div>
+    </div>
+
+    <section class="controls">
+      <button id="pause">Pause</button>
+      <button id="speed">Speed 1×</button>
+      <button id="new">New match</button>
+    </section>
+
+    <footer>
+      <span id="tally">This session: Red 0 · Blue 0 · Draws 0</span>
+      <span>
+        <a id="seed-link" href="#">seed</a> ·
+        <a id="versions-link" href="versions/">versions</a>
+        <span id="version-label"></span>
+      </span>
+    </footer>
+  </main>
+
+  <script type="module" src="viewer/viewer.js"></script>
+</body>
+</html>
