@@ -35,7 +35,8 @@ const versions = [];
 for (const tag of tags) {
   const dir = join(out, "versions", tag);
   mkdirSync(dir, { recursive: true });
-  execSync(`git archive --format=tar "${tag}" | tar -x -C "${dir}"`, { cwd: root, shell: true });
+  // Extract with cwd = target dir (tar on Windows can't parse "C:\..." for -C).
+  execSync(`git archive --format=tar "${tag}" | tar -xf -`, { cwd: dir, shell: true, env: { ...process.env, GIT_DIR: join(root, ".git") } });
   const date = git(`tag -l "${tag}" --format="%(creatordate:short)"`);
   const message = git(`tag -l "${tag}" --format="%(contents)"`) || git(`log -1 --format=%B "${tag}"`);
   writeFileSync(join(dir, "version.json"), JSON.stringify({ label: tag, date }));
