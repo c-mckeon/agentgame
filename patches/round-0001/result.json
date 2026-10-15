@@ -1,0 +1,31 @@
+{
+  "round": 1,
+  "verdict": "draw",
+  "winRateRed": 0.477,
+  "ci": [
+    0.43356169906973,
+    0.5207890333826916
+  ],
+  "games": 500,
+  "red": {
+    "score": 28.95,
+    "banked": 28.95,
+    "collected": 29.36,
+    "trapsSet": 0,
+    "trapped": 0,
+    "coinsDropped": 0,
+    "carriedAtEnd": 0.41
+  },
+  "blue": {
+    "score": 29.25,
+    "banked": 29.25,
+    "collected": 29.63,
+    "trapsSet": 0,
+    "trapped": 0,
+    "coinsDropped": 0,
+    "carriedAtEnd": 0.38
+  },
+  "wins": 211,
+  "draws": 55,
+  "losses": 234
+}
