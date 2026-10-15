@@ -1,3 +1,4 @@
 # Red notes
 
-Red's strategy notes. Only Red edits this file. Note that it becomes visible to everyone once it's merged.
+Round 1: Red stopped laying traps and banks earlier. Mid-board traps cost 3 points a match and paid back very little.
+Red keeps track of where Blue's score drops and stays off those cells.
